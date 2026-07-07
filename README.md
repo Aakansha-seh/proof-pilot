@@ -260,5 +260,4 @@ Any Node host works with `npm run build && npm start`.
 # AMD Compute Usage
 
 ProofPilot is designed with an AMD-powered production inference path. The core claim extraction and structured evidence analysis pipeline can run on an AMD GPU-backed OpenAI-compatible endpoint using open-source models and ROCm-compatible infrastructure. NVIDIA APIs are used during rapid development and Fireworks AI is used selectively for final quality testing and report generation. The provider abstraction enables ProofPilot to route its central claim-analysis workload to AMD compute, making AMD inference a core part of the project architecture rather than a cosmetic integration.
-#   p r o o f - p i l o t  
- 
+#
