@@ -3,12 +3,14 @@
 import { use, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, FileText, Map, PenLine } from "lucide-react";
+import { ArrowLeft, FileText, Map, PenLine, Radar } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ClaimMap } from "@/components/claims/claim-map";
 import { PitchRewrite } from "@/components/claims/pitch-rewrite";
+import { CompetitiveIntel } from "@/components/competitors/competitive-intel";
+import { EvidencePackView } from "@/components/claims/evidence-pack-view";
 import { Disclaimer } from "@/components/app/disclaimer";
 import { useMounted } from "@/components/app/use-mounted";
 import { useAudits } from "@/lib/store";
@@ -61,17 +63,14 @@ export default function AuditWorkspace({
             </div>
           </div>
         </div>
-        <Button asChild variant="secondary">
-          <Link href={`/app/pack?id=${audit.id}`}>
-            <FileText className="h-4 w-4" /> Evidence Pack
-          </Link>
-        </Button>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="map"><Map className="mr-1.5 h-4 w-4" /> Claim Map</TabsTrigger>
           <TabsTrigger value="rewrite"><PenLine className="mr-1.5 h-4 w-4" /> Rewrite</TabsTrigger>
+          <TabsTrigger value="competitors"><Radar className="mr-1.5 h-4 w-4" /> Competitors</TabsTrigger>
+          <TabsTrigger value="pack"><FileText className="mr-1.5 h-4 w-4" /> Evidence Pack</TabsTrigger>
         </TabsList>
 
         <TabsContent value="map">
@@ -79,7 +78,7 @@ export default function AuditWorkspace({
             audit={audit.audit}
             auditId={audit.id}
             onUseRewrite={() => setTab("rewrite")}
-            onAddToPack={() => router.push(`/app/pack?id=${audit.id}`)}
+            onAddToPack={() => setTab("pack")}
           />
           <Disclaimer className="mt-8" />
         </TabsContent>
@@ -90,6 +89,18 @@ export default function AuditWorkspace({
             initialRewrite={audit.rewrittenPitch}
             onSave={(text) => setRewrite(audit.id, text)}
           />
+        </TabsContent>
+
+        <TabsContent value="competitors">
+          <CompetitiveIntel
+            audit={audit}
+            onGoToRewrite={() => setTab("rewrite")}
+            onGoToClaims={() => setTab("map")}
+          />
+        </TabsContent>
+
+        <TabsContent value="pack">
+          <EvidencePackView audit={audit} />
         </TabsContent>
       </Tabs>
     </div>

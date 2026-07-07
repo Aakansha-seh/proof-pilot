@@ -6,6 +6,7 @@ import type {
   SavedAudit,
   ClaimAuditResponse,
   EvidenceItem,
+  StrategyTask,
 } from "@/lib/schemas";
 import { uid } from "@/lib/utils";
 
@@ -30,6 +31,13 @@ type AuditsState = {
   deleteAudit: (id: string) => void;
 
   setRewrite: (id: string, rewrite: string) => void;
+  appendRewrite: (id: string, text: string) => void;
+  setCompetitiveIntel: (
+    id: string,
+    intel: SavedAudit["competitiveIntel"]
+  ) => void;
+  addStrategyTask: (id: string, task: StrategyTask) => void;
+  toggleStrategyTask: (id: string, taskId: string) => void;
   addEvidence: (id: string, item: EvidenceItem) => void;
   updateEvidence: (id: string, itemId: string, patch: Partial<EvidenceItem>) => void;
   removeEvidence: (id: string, itemId: string) => void;
@@ -100,6 +108,62 @@ export const useAudits = create<AuditsState>()(
           audits: s.audits.map((a) =>
             a.id === id
               ? { ...a, rewrittenPitch: rewrite, updatedAt: new Date().toISOString() }
+              : a
+          ),
+        })),
+
+      appendRewrite: (id, text) =>
+        set((s) => ({
+          audits: s.audits.map((a) =>
+            a.id === id
+              ? {
+                  ...a,
+                  rewrittenPitch: a.rewrittenPitch
+                    ? `${a.rewrittenPitch}\n\n${text}`
+                    : text,
+                  updatedAt: new Date().toISOString(),
+                }
+              : a
+          ),
+        })),
+
+      setCompetitiveIntel: (id, intel) =>
+        set((s) => ({
+          audits: s.audits.map((a) =>
+            a.id === id
+              ? {
+                  ...a,
+                  competitiveIntel: intel,
+                  updatedAt: new Date().toISOString(),
+                }
+              : a
+          ),
+        })),
+
+      addStrategyTask: (id, task) =>
+        set((s) => ({
+          audits: s.audits.map((a) =>
+            a.id === id
+              ? {
+                  ...a,
+                  strategyTasks: [...(a.strategyTasks ?? []), task],
+                  updatedAt: new Date().toISOString(),
+                }
+              : a
+          ),
+        })),
+
+      toggleStrategyTask: (id, taskId) =>
+        set((s) => ({
+          audits: s.audits.map((a) =>
+            a.id === id
+              ? {
+                  ...a,
+                  strategyTasks: (a.strategyTasks ?? []).map((t) =>
+                    t.id === taskId ? { ...t, done: !t.done } : t
+                  ),
+                  updatedAt: new Date().toISOString(),
+                }
               : a
           ),
         })),

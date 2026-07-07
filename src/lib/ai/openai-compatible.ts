@@ -21,7 +21,13 @@ import {
   rewriteSystem,
   EVIDENCE_PACK_SYSTEM,
 } from "./prompts";
-import { normalizeAudit } from "./normalize";
+import { coerceAudit } from "./normalize";
+import {
+  IntelModelOutput,
+  IntelModelOutputSchema,
+} from "@/lib/competitors/schema";
+import { INTEL_SYSTEM, intelUser, type IntelContext } from "@/lib/competitors/prompts";
+import type { SearchResult } from "@/lib/search/types";
 
 type ChatMessage = {
   role: "system" | "user" | "assistant";
@@ -33,11 +39,6 @@ type ChatMessage = {
       >;
 };
 
-/**
- * Shared implementation for any OpenAI-compatible chat-completions endpoint.
- * NVIDIA, Fireworks, and AMD all speak this dialect, so provider-specific
- * classes only differ by config (base URL, model, key).
- */
 export class OpenAICompatibleProvider implements AIProvider {
   readonly id;
   constructor(private readonly cfg: ProviderConfig) {
@@ -46,7 +47,7 @@ export class OpenAICompatibleProvider implements AIProvider {
 
   private async chat(
     messages: ChatMessage[],
-    opts: { model?: string; temperature?: number; jsonMode?: boolean } = {}
+    opts: { model?: string; temperature?: number; jsonMode?: boolean; maxTokens?: number } = {}
   ): Promise<string> {
     if (!this.cfg.apiKey) {
       throw new ProviderError(
@@ -58,9 +59,8 @@ export class OpenAICompatibleProvider implements AIProvider {
       model: opts.model ?? this.cfg.model,
       messages,
       temperature: opts.temperature ?? 0.2,
-      max_tokens: 4096,
+      max_tokens: opts.maxTokens ?? 4096,
     };
-    // Most OpenAI-compatible servers accept response_format for JSON.
     if (opts.jsonMode) body.response_format = { type: "json_object" };
 
     let res: Response;
@@ -92,10 +92,8 @@ export class OpenAICompatibleProvider implements AIProvider {
     return content;
   }
 
-  // ---- JSON helpers -------------------------------------------------------
   private extractJson(raw: string): string {
     let s = raw.trim();
-    // Strip markdown fences if the model added them despite instructions.
     const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
     if (fence) s = fence[1].trim();
     const first = s.indexOf("{");
@@ -109,7 +107,6 @@ export class OpenAICompatibleProvider implements AIProvider {
     schema: { safeParse: (v: unknown) => { success: boolean; data?: T } },
     label: string
   ): Promise<T> {
-    // 1. Parse normally
     const attempt = (text: string) => {
       try {
         return schema.safeParse(JSON.parse(this.extractJson(text)));
@@ -120,7 +117,6 @@ export class OpenAICompatibleProvider implements AIProvider {
     const first = attempt(raw);
     if (first.success && first.data) return first.data;
 
-    // 2. Retry once with a JSON-repair prompt
     const repaired = await this.chat(
       [
         { role: "system", content: JSON_REPAIR_SYSTEM },
@@ -134,28 +130,52 @@ export class OpenAICompatibleProvider implements AIProvider {
     const second = attempt(repaired);
     if (second.success && second.data) return second.data;
 
-    // 3. Give up cleanly
     throw new ProviderError(
       `${this.id} produced malformed JSON for ${label}.`,
       this.id
     );
   }
 
-  // ---- AIProvider interface ----------------------------------------------
   async analyzeClaims(input: string): Promise<ClaimAuditResponse> {
     const raw = await this.chat(
       [
         { role: "system", content: CLAIM_AUDIT_SYSTEM },
         { role: "user", content: claimAuditUser(input) },
       ],
-      { jsonMode: true }
+      { jsonMode: true, maxTokens: 8000 }
     );
-    const parsed = await this.parseWithRepair(
-      raw,
-      ClaimAuditResponseSchema,
-      "claim audit"
-    );
-    return normalizeAudit(parsed);
+
+    // Tolerant parse: coerce arbitrary model JSON into a valid audit instead
+    // of rejecting on minor schema drift. Only re-ask if JSON itself is broken.
+    let obj: unknown;
+    try {
+      obj = JSON.parse(this.extractJson(raw));
+    } catch {
+      const repaired = await this.chat(
+        [
+          { role: "system", content: JSON_REPAIR_SYSTEM },
+          { role: "user", content: `Fix this into valid JSON. Return only JSON:\n\n${raw}` },
+        ],
+        { jsonMode: true, temperature: 0, maxTokens: 8000 }
+      );
+      try {
+        obj = JSON.parse(this.extractJson(repaired));
+      } catch {
+        throw new ProviderError(
+          `${this.id} produced malformed JSON for claim audit.`,
+          this.id
+        );
+      }
+    }
+
+    const audit = coerceAudit(obj);
+    if (audit.claims.length === 0) {
+      throw new ProviderError(
+        `${this.id} returned no usable claims. Try again or shorten the input.`,
+        this.id
+      );
+    }
+    return audit;
   }
 
   async analyzeImage(
@@ -210,6 +230,24 @@ export class OpenAICompatibleProvider implements AIProvider {
       raw,
       EvidencePackResponseSchema,
       "evidence pack"
+    );
+  }
+
+  async analyzeCompetitors(
+    ctx: IntelContext,
+    sources: SearchResult[]
+  ): Promise<IntelModelOutput> {
+    const raw = await this.chat(
+      [
+        { role: "system", content: INTEL_SYSTEM },
+        { role: "user", content: intelUser(ctx, sources) },
+      ],
+      { jsonMode: true, temperature: 0.3 }
+    );
+    return this.parseWithRepair(
+      raw,
+      IntelModelOutputSchema,
+      "competitive intelligence"
     );
   }
 }

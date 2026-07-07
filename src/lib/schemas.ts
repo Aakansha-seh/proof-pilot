@@ -133,6 +133,18 @@ export const EvidenceItemSchema = z.object({
 });
 export type EvidenceItem = z.infer<typeof EvidenceItemSchema>;
 
+// A validation task added from the Competitors "What must you prove to win?" panel.
+export type StrategyTask = {
+  id: string;
+  text: string;
+  proofType?: string;
+  priority?: "low" | "medium" | "high";
+  owner?: string;
+  effort?: string;
+  done: boolean;
+  createdAt: string;
+};
+
 export type SavedAudit = {
   id: string;
   title: string;
@@ -143,6 +155,10 @@ export type SavedAudit = {
   audit: ClaimAuditResponse;
   rewrittenPitch?: string;
   evidenceItems: EvidenceItem[];
+  // Optional Competitive Intelligence run attached to this audit.
+  competitiveIntel?: import("@/lib/competitors/schema").CompetitiveIntelResponse;
+  // Validation tasks captured from the competitor strategy panel.
+  strategyTasks?: StrategyTask[];
   createdAt: string;
   updatedAt: string;
 };

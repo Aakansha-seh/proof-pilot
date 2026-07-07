@@ -31,6 +31,23 @@ function envConfig(id: ProviderId): ProviderConfig {
   };
 }
 
+/** True when the AMD inference path is fully configured (key + base URL). */
+export function amdConfigured(): boolean {
+  return Boolean(process.env.AMD_API_KEY && process.env.AMD_BASE_URL);
+}
+
+/**
+ * Provider for the Competitive Intelligence workload. Prefers the AMD
+ * inference path when configured (per the AMD workload spec); otherwise
+ * falls back to the active provider.
+ */
+export function getIntelProvider(): { provider: AIProvider; usedAmd: boolean } {
+  if (amdConfigured()) {
+    return { provider: getProvider("amd"), usedAmd: true };
+  }
+  return { provider: getProvider(), usedAmd: false };
+}
+
 /** Resolve the active provider id from AI_PROVIDER (defaults to nvidia). */
 export function activeProviderId(): ProviderId {
   const raw = (process.env.AI_PROVIDER || "nvidia").toLowerCase();
