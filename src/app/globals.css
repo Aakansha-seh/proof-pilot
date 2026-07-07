@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Dark-first, calm and premium. Deep slate + refined indigo accent. */
+    --background: 222 47% 5%;
+    --foreground: 210 40% 96%;
+
+    --card: 222 40% 8%;
+    --card-foreground: 210 40% 96%;
+
+    --primary: 224 76% 60%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 217 33% 14%;
+    --secondary-foreground: 210 40% 92%;
+
+    --muted: 217 33% 12%;
+    --muted-foreground: 215 20% 62%;
+
+    --accent: 217 33% 16%;
+    --accent-foreground: 210 40% 96%;
+
+    --border: 217 33% 16%;
+    --input: 217 33% 18%;
+    --ring: 224 76% 60%;
+
+    /* Semantic status tokens */
+    --proven: 152 60% 45%;
+    --risk: 0 72% 58%;
+    --warn: 38 92% 55%;
+    --future: 199 89% 55%;
+
+    --radius: 0.75rem;
+
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  ::selection {
+    @apply bg-primary/30;
+  }
+}
+
+/* ---------- Ambient background field ---------- */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, hsl(var(--border) / 0.35) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border) / 0.35) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+}
+
+.aurora {
+  background:
+    radial-gradient(60% 50% at 15% 0%, hsl(224 76% 40% / 0.28), transparent 60%),
+    radial-gradient(50% 45% at 85% 10%, hsl(199 89% 45% / 0.18), transparent 60%),
+    radial-gradient(50% 40% at 50% 100%, hsl(262 60% 45% / 0.12), transparent 60%);
+  filter: blur(6px);
+}
+
+.glass {
+  background: hsl(var(--card) / 0.6);
+  backdrop-filter: blur(14px);
+  border: 1px solid hsl(var(--border) / 0.7);
+}
+
+.text-gradient {
+  background: linear-gradient(180deg, hsl(210 40% 98%), hsl(215 25% 72%));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Thin custom scrollbar */
+.scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 999px;
+}
+.scroll-thin::-webkit-scrollbar-track { background: transparent; }
+
+/* Print styles for the Evidence Pack */
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  .print-page { box-shadow: none !important; border: none !important; }
+}
