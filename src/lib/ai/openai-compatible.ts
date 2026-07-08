@@ -169,12 +169,6 @@ export class OpenAICompatibleProvider implements AIProvider {
     }
 
     const audit = coerceAudit(obj);
-    if (audit.claims.length === 0) {
-      throw new ProviderError(
-        `${this.id} returned no usable claims. Try again or shorten the input.`,
-        this.id
-      );
-    }
     return audit;
   }
 
