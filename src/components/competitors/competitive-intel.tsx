@@ -12,7 +12,8 @@ import {
   Cpu,
   RefreshCw,
 } from "lucide-react";
-import type { SavedAudit } from "@/lib/schemas";
+import type { SavedAudit, CompetitiveSignal } from "@/lib/schemas";
+import type { CompetitiveIntelResponse } from "@/lib/competitors/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,7 @@ export function CompetitiveIntel({
 }) {
   const setIntel = useAudits((s) => s.setCompetitiveIntel);
   const appendRewrite = useAudits((s) => s.appendRewrite);
+  const applyCompetitiveSignals = useAudits((s) => s.applyCompetitiveSignals);
   const intel = audit.competitiveIntel;
 
   const [chips, setChips] = useState<string[]>([]);
@@ -74,13 +76,18 @@ export function CompetitiveIntel({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Analysis failed.");
-      setIntel(audit.id, data.intel);
+      applyIntel(data.intel);
       setStatus("idle");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
       setStatus("error");
     }
   }
+
+  const applyIntel = (data: CompetitiveIntelResponse) => {
+    setIntel(audit.id, data);
+    applyCompetitiveSignals(audit.id, resolveSignals(data, audit.audit.claims));
+  };
 
   function addChip() {
     const v = draft.trim();
@@ -148,7 +155,7 @@ export function CompetitiveIntel({
               {status === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
               Research competitors
             </Button>
-            <Button variant="secondary" onClick={() => setIntel(audit.id, { ...DEMO_INTEL })}>
+            <Button variant="secondary" onClick={() => applyIntel({ ...DEMO_INTEL })}>
               <PlayCircle className="h-4 w-4" /> Load demo
             </Button>
           </div>
@@ -305,4 +312,36 @@ function StickyNav({ onJump }: { onJump: (id: string) => void }) {
       ))}
     </div>
   );
+}
+
+
+// Map competitor stress-test results back onto Claim Map claims (by id, then text).
+function resolveSignals(
+  data: CompetitiveIntelResponse,
+  claims: { id: string; claim_text: string }[]
+): CompetitiveSignal[] {
+  const byId = new Map(claims.map((c) => [c.id, c]));
+  const norm = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const out: CompetitiveSignal[] = [];
+  for (const cc of data.claimCrossCheck) {
+    let claimId = cc.claimId && byId.has(cc.claimId) ? cc.claimId : undefined;
+    if (!claimId) {
+      const key = norm(cc.claimText).slice(0, 30);
+      const match = claims.find(
+        (c) => key.length > 6 && (norm(c.claim_text).includes(key) || key.includes(norm(c.claim_text).slice(0, 30)))
+      );
+      claimId = match?.id;
+    }
+    if (claimId) {
+      out.push({
+        claimId,
+        verdict: cc.verdict,
+        reasoning: cc.reasoning,
+        saferRewrite: cc.saferRewrite,
+        competitorRef: cc.competitorRef,
+        checkedAt: data.meta.generatedAt,
+      });
+    }
+  }
+  return out;
 }

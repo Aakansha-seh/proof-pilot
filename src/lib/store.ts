@@ -7,6 +7,7 @@ import type {
   ClaimAuditResponse,
   EvidenceItem,
   StrategyTask,
+  CompetitiveSignal,
 } from "@/lib/schemas";
 import { uid } from "@/lib/utils";
 
@@ -36,6 +37,7 @@ type AuditsState = {
     id: string,
     intel: SavedAudit["competitiveIntel"]
   ) => void;
+  applyCompetitiveSignals: (id: string, signals: CompetitiveSignal[]) => void;
   addStrategyTask: (id: string, task: StrategyTask) => void;
   toggleStrategyTask: (id: string, taskId: string) => void;
   addEvidence: (id: string, item: EvidenceItem) => void;
@@ -134,6 +136,22 @@ export const useAudits = create<AuditsState>()(
               ? {
                   ...a,
                   competitiveIntel: intel,
+                  updatedAt: new Date().toISOString(),
+                }
+              : a
+          ),
+        })),
+
+      applyCompetitiveSignals: (id, signals) =>
+        set((s) => ({
+          audits: s.audits.map((a) =>
+            a.id === id
+              ? {
+                  ...a,
+                  competitiveSignals: {
+                    ...(a.competitiveSignals ?? {}),
+                    ...Object.fromEntries(signals.map((x) => [x.claimId, x])),
+                  },
                   updatedAt: new Date().toISOString(),
                 }
               : a

@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
-import type { Claim } from "@/lib/schemas";
+import { ChevronRight, Swords } from "lucide-react";
+import type { Claim, CompetitiveSignal } from "@/lib/schemas";
 import { Badge } from "@/components/ui/badge";
 import {
   CATEGORY_LABEL,
@@ -15,10 +15,12 @@ export function ClaimCard({
   claim,
   onOpen,
   index = 0,
+  signal,
 }: {
   claim: Claim;
   onOpen: () => void;
   index?: number;
+  signal?: CompetitiveSignal;
 }) {
   const g = GROUP_META[claim.group];
   return (
@@ -44,6 +46,11 @@ export function ClaimCard({
         <Badge variant={RISK_BADGE[claim.risk_level]}>{claim.risk_level} risk</Badge>
         <Badge variant="neutral">{CATEGORY_LABEL[claim.claim_category]}</Badge>
         <Badge variant="outline">{EVIDENCE_LABEL[claim.evidence_status]}</Badge>
+        {signal && signal.verdict !== "plausible" && (
+          <Badge variant={signal.verdict === "unsupported" ? "risk" : "warn"} className="gap-1">
+            <Swords className="h-3 w-3" /> competitor risk
+          </Badge>
+        )}
       </div>
     </motion.button>
   );

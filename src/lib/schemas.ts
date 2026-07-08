@@ -133,6 +133,16 @@ export const EvidenceItemSchema = z.object({
 });
 export type EvidenceItem = z.infer<typeof EvidenceItemSchema>;
 
+// A competitor stress-test result fed back onto a Claim Map claim.
+export type CompetitiveSignal = {
+  claimId: string;
+  verdict: "unsupported" | "needs_benchmark" | "plausible";
+  reasoning: string;
+  saferRewrite: string;
+  competitorRef?: string;
+  checkedAt: string;
+};
+
 // A validation task added from the Competitors "What must you prove to win?" panel.
 export type StrategyTask = {
   id: string;
@@ -159,6 +169,8 @@ export type SavedAudit = {
   competitiveIntel?: import("@/lib/competitors/schema").CompetitiveIntelResponse;
   // Validation tasks captured from the competitor strategy panel.
   strategyTasks?: StrategyTask[];
+  // Competitor stress-test signals keyed by claim id.
+  competitiveSignals?: Record<string, CompetitiveSignal>;
   createdAt: string;
   updatedAt: string;
 };

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { AlertTriangle, ArrowRight, SlidersHorizontal } from "lucide-react";
+import { AlertTriangle, ArrowRight, SlidersHorizontal, Swords } from "lucide-react";
 import type {
   Claim,
   ClaimAuditResponse,
@@ -10,6 +10,7 @@ import type {
   RiskLevel,
   ClaimCategory,
   EvidenceStatus,
+  CompetitiveSignal,
 } from "@/lib/schemas";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,12 +33,19 @@ export function ClaimMap({
   auditId,
   onUseRewrite,
   onAddToPack,
+  signals,
 }: {
   audit: ClaimAuditResponse;
   auditId?: string;
   onUseRewrite?: (c: Claim) => void;
   onAddToPack?: (c: Claim) => void;
+  signals?: Record<string, CompetitiveSignal>;
 }) {
+  const flaggedCount = signals
+    ? audit.claims.filter(
+        (c) => signals[c.id] && signals[c.id].verdict !== "plausible"
+      ).length
+    : 0;
   const [risk, setRisk] = useState<RiskFilter>("all");
   const [category, setCategory] = useState<ClaimCategory | "all">("all");
   const [evidence, setEvidence] = useState<EvidenceStatus | "all">("all");
@@ -162,6 +170,16 @@ export function ClaimMap({
         />
       </div>
 
+      {flaggedCount > 0 && (
+        <div className="mt-4 flex items-center gap-2 rounded-lg border border-[hsl(var(--risk)/0.35)] bg-[hsl(var(--risk)/0.06)] p-3 text-sm">
+          <Swords className="h-4 w-4 shrink-0 text-[hsl(var(--risk))]" />
+          <span>
+            {flaggedCount} claim{flaggedCount === 1 ? "" : "s"} flagged by your
+            competitor analysis. Open a flagged claim to see the competitive risk and a safer rewrite.
+          </span>
+        </div>
+      )}
+
       {/* Claim Map grouped grid */}
       <div className="mt-6 grid gap-5 lg:grid-cols-2">
         {GROUP_ORDER.map((g) => (
@@ -188,6 +206,7 @@ export function ClaimMap({
                   claim={c}
                   index={i}
                   onOpen={() => setOpenId(c.id)}
+                  signal={signals?.[c.id]}
                 />
               ))}
             </div>

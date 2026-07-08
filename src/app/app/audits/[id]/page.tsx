@@ -77,6 +77,7 @@ export default function AuditWorkspace({
           <ClaimMap
             audit={audit.audit}
             auditId={audit.id}
+            signals={audit.competitiveSignals}
             onUseRewrite={() => setTab("rewrite")}
             onAddToPack={() => setTab("pack")}
           />
