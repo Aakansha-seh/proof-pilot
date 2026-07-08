@@ -87,16 +87,23 @@ export default function Landing() {
           <motion.div
             {...fadeUp}
             transition={{ ...fadeUp.transition, delay: 0.18 }}
-            className="mt-8 flex flex-wrap items-center gap-3"
+            className="mt-8 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
           >
-            <Button asChild size="lg">
+            <Button asChild size="lg" className="w-full">
               <Link href="/app/new">
                 Audit My Claims <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="secondary">
-              <Link href="/app/demo">View Demo Audit</Link>
+
+            <Button asChild size="lg" variant="secondary" className="w-full">
+              <Link href="/analyze-startup">Analyze Startup</Link>
             </Button>
+
+            <div className="sm:col-span-2 flex justify-center">
+              <Button asChild size="lg" variant="secondary">
+                <Link href="/app/demo">View Demo Audit</Link>
+              </Button>
+            </div>
           </motion.div>
           <motion.p
             {...fadeUp}
