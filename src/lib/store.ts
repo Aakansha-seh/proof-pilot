@@ -33,6 +33,7 @@ type AuditsState = {
 
   setRewrite: (id: string, rewrite: string) => void;
   appendRewrite: (id: string, text: string) => void;
+  promoteRewrite: (id: string) => void;
   setCompetitiveIntel: (
     id: string,
     intel: SavedAudit["competitiveIntel"]
@@ -124,6 +125,20 @@ export const useAudits = create<AuditsState>()(
                   rewrittenPitch: a.rewrittenPitch
                     ? `${a.rewrittenPitch}\n\n${text}`
                     : text,
+                  updatedAt: new Date().toISOString(),
+                }
+              : a
+          ),
+        })),
+
+      promoteRewrite: (id) =>
+        set((s) => ({
+          audits: s.audits.map((a) =>
+            a.id === id && a.rewrittenPitch
+              ? {
+                  ...a,
+                  originalText: a.rewrittenPitch,
+                  rewrittenPitch: undefined,
                   updatedAt: new Date().toISOString(),
                 }
               : a

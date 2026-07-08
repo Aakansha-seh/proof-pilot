@@ -18,6 +18,15 @@ import { useAudits } from "@/lib/store";
 import type { ClaimAuditResponse } from "@/lib/schemas";
 import { formatDate } from "@/lib/utils";
 
+function TabCount({ n }: { n: number }) {
+  if (!n) return null;
+  return (
+    <span className="ml-1.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+      {n}
+    </span>
+  );
+}
+
 export default function AuditWorkspace({
   params,
 }: {
@@ -29,6 +38,7 @@ export default function AuditWorkspace({
   const audit = useAudits((s) => s.audits.find((a) => a.id === id));
   const setRewrite = useAudits((s) => s.setRewrite);
   const applyReaudit = useAudits((s) => s.applyReaudit);
+  const promoteRewrite = useAudits((s) => s.promoteRewrite);
   const [pendingReaudit, setPendingReaudit] = useState<ClaimAuditResponse | null>(null);
   const [tab, setTab] = useState("map");
 
@@ -71,10 +81,22 @@ export default function AuditWorkspace({
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex-wrap">
-          <TabsTrigger value="map"><Map className="mr-1.5 h-4 w-4" /> Claim Map</TabsTrigger>
-          <TabsTrigger value="rewrite"><PenLine className="mr-1.5 h-4 w-4" /> Rewrite</TabsTrigger>
-          <TabsTrigger value="competitors"><Radar className="mr-1.5 h-4 w-4" /> Competitors</TabsTrigger>
-          <TabsTrigger value="pack"><FileText className="mr-1.5 h-4 w-4" /> Evidence Pack</TabsTrigger>
+          <TabsTrigger value="map">
+            <Map className="mr-1.5 h-4 w-4" /> Claim Map
+            <TabCount n={audit.audit.claims.length} />
+          </TabsTrigger>
+          <TabsTrigger value="rewrite">
+            <PenLine className="mr-1.5 h-4 w-4" /> Rewrite
+            <TabCount n={audit.revisions?.length ?? 0} />
+          </TabsTrigger>
+          <TabsTrigger value="competitors">
+            <Radar className="mr-1.5 h-4 w-4" /> Competitors
+            <TabCount n={audit.competitiveIntel?.competitors.length ?? 0} />
+          </TabsTrigger>
+          <TabsTrigger value="pack">
+            <FileText className="mr-1.5 h-4 w-4" /> Evidence Pack
+            <TabCount n={audit.evidenceItems.length} />
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="map">
@@ -91,6 +113,7 @@ export default function AuditWorkspace({
                 setPendingReaudit(null);
               }}
               onRewrite={() => {
+                promoteRewrite(audit.id);
                 setPendingReaudit(null);
                 setTab("rewrite");
               }}
