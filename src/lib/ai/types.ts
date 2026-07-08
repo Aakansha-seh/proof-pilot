@@ -3,6 +3,9 @@ import type {
   ImageAnalysisResponse,
   EvidencePackResponse,
 } from "@/lib/schemas";
+import type { IntelModelOutput } from "@/lib/competitors/schema";
+import type { IntelContext } from "@/lib/competitors/prompts";
+import type { SearchResult } from "@/lib/search/types";
 
 export type ProviderId = "nvidia" | "fireworks" | "amd";
 
@@ -19,6 +22,10 @@ export interface AIProvider {
   generateEvidencePack(
     audit: ClaimAuditResponse
   ): Promise<EvidencePackResponse>;
+  analyzeCompetitors(
+    ctx: IntelContext,
+    sources: SearchResult[]
+  ): Promise<IntelModelOutput>;
 }
 
 export interface ProviderConfig {

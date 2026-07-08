@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
-import type { Claim } from "@/lib/schemas";
+import { ChevronRight, Swords } from "lucide-react";
+import { claimRiskPercent } from "@/lib/claim-metrics";
+import type { Claim, CompetitiveSignal } from "@/lib/schemas";
 import { Badge } from "@/components/ui/badge";
 import {
   CATEGORY_LABEL,
@@ -15,12 +16,16 @@ export function ClaimCard({
   claim,
   onOpen,
   index = 0,
+  signal,
 }: {
   claim: Claim;
   onOpen: () => void;
   index?: number;
+  signal?: CompetitiveSignal;
 }) {
   const g = GROUP_META[claim.group];
+  const riskPct = claimRiskPercent(claim);
+  const riskTone = riskPct >= 70 ? "--risk" : riskPct >= 40 ? "--warn" : "--proven";
   return (
     <motion.button
       layout
@@ -38,12 +43,23 @@ export function ClaimCard({
         <p className="flex-1 text-sm leading-relaxed text-foreground/90 line-clamp-3">
           {claim.claim_text}
         </p>
-        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+        <div className="flex shrink-0 flex-col items-end gap-0.5">
+          <span className="text-xs font-semibold tabular-nums" style={{ color: `hsl(var(${riskTone}))` }}>
+            {riskPct}%
+          </span>
+          <span className="text-[10px] text-muted-foreground">risk</span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+        </div>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-1.5 pl-5">
         <Badge variant={RISK_BADGE[claim.risk_level]}>{claim.risk_level} risk</Badge>
         <Badge variant="neutral">{CATEGORY_LABEL[claim.claim_category]}</Badge>
         <Badge variant="outline">{EVIDENCE_LABEL[claim.evidence_status]}</Badge>
+        {signal && signal.verdict !== "plausible" && (
+          <Badge variant={signal.verdict === "unsupported" ? "risk" : "warn"} className="gap-1">
+            <Swords className="h-3 w-3" /> competitor risk
+          </Badge>
+        )}
       </div>
     </motion.button>
   );

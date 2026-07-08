@@ -9,6 +9,9 @@ and NEVER to fabricate evidence, citations, metrics, research, customer counts, 
 
 Rules:
 - Only analyze claims that appear in the provided text. Do not invent numbers or sources.
+- DO NOT extract disclaimers, exclusions, or negative declarations (e.g., "we do not guarantee", "no medical claims", "we make no promises", "does not claim") as active claims. Ignore them during extraction.
+- DO NOT treat disclosures of limitations (e.g., "has not been audited yet", "only tested locally", "not tested under load") as active high-risk claims of capability. Admissions of what you cannot do or have not done are not active claims and should not be penalized or given validation plans.
+- If a document contains zero active claims (e.g., it is purely legal disclaimers or blank), return an empty claims array: "claims": []. Do not fabricate or force claims.
 - Use cautious framing: "evidence status", "support level", "risk signal", "validation recommendation".
 - Never mark anything "verified" or "proven" on your own authority.
 - credible_rewrite must preserve ambition while removing unsupported certainty. It must not sound weak or apologetic.

@@ -6,6 +6,8 @@ import type {
   SavedAudit,
   ClaimAuditResponse,
   EvidenceItem,
+  StrategyTask,
+  CompetitiveSignal,
 } from "@/lib/schemas";
 import { uid } from "@/lib/utils";
 
@@ -30,6 +32,16 @@ type AuditsState = {
   deleteAudit: (id: string) => void;
 
   setRewrite: (id: string, rewrite: string) => void;
+  appendRewrite: (id: string, text: string) => void;
+  promoteRewrite: (id: string) => void;
+  setCompetitiveIntel: (
+    id: string,
+    intel: SavedAudit["competitiveIntel"]
+  ) => void;
+  applyCompetitiveSignals: (id: string, signals: CompetitiveSignal[]) => void;
+  applyReaudit: (id: string, newAudit: ClaimAuditResponse, newText: string) => void;
+  addStrategyTask: (id: string, task: StrategyTask) => void;
+  toggleStrategyTask: (id: string, taskId: string) => void;
   addEvidence: (id: string, item: EvidenceItem) => void;
   updateEvidence: (id: string, itemId: string, patch: Partial<EvidenceItem>) => void;
   removeEvidence: (id: string, itemId: string) => void;
@@ -100,6 +112,127 @@ export const useAudits = create<AuditsState>()(
           audits: s.audits.map((a) =>
             a.id === id
               ? { ...a, rewrittenPitch: rewrite, updatedAt: new Date().toISOString() }
+              : a
+          ),
+        })),
+
+      appendRewrite: (id, text) =>
+        set((s) => ({
+          audits: s.audits.map((a) =>
+            a.id === id
+              ? {
+                  ...a,
+                  rewrittenPitch: a.rewrittenPitch
+                    ? `${a.rewrittenPitch}\n\n${text}`
+                    : text,
+                  updatedAt: new Date().toISOString(),
+                }
+              : a
+          ),
+        })),
+
+      promoteRewrite: (id) =>
+        set((s) => ({
+          audits: s.audits.map((a) =>
+            a.id === id && a.rewrittenPitch
+              ? {
+                  ...a,
+                  originalText: a.rewrittenPitch,
+                  rewrittenPitch: undefined,
+                  updatedAt: new Date().toISOString(),
+                }
+              : a
+          ),
+        })),
+
+      setCompetitiveIntel: (id, intel) =>
+        set((s) => ({
+          audits: s.audits.map((a) =>
+            a.id === id
+              ? {
+                  ...a,
+                  competitiveIntel: intel,
+                  updatedAt: new Date().toISOString(),
+                }
+              : a
+          ),
+        })),
+
+      applyCompetitiveSignals: (id, signals) =>
+        set((s) => ({
+          audits: s.audits.map((a) =>
+            a.id === id
+              ? {
+                  ...a,
+                  competitiveSignals: {
+                    ...(a.competitiveSignals ?? {}),
+                    ...Object.fromEntries(signals.map((x) => [x.claimId, x])),
+                  },
+                  updatedAt: new Date().toISOString(),
+                }
+              : a
+          ),
+        })),
+
+      applyReaudit: (id, newAudit, newText) =>
+        set((s) => ({
+          audits: s.audits.map((a) => {
+            if (a.id !== id) return a;
+            const now = new Date().toISOString();
+            const base =
+              a.revisions && a.revisions.length
+                ? a.revisions
+                : [
+                    {
+                      label: "Original",
+                      text: a.originalText,
+                      score: a.audit.overall_credibility_score,
+                      createdAt: a.createdAt,
+                    },
+                  ];
+            return {
+              ...a,
+              revisions: [
+                ...base,
+                {
+                  label: `v${base.length}`,
+                  text: newText,
+                  score: newAudit.overall_credibility_score,
+                  createdAt: now,
+                },
+              ],
+              audit: newAudit,
+              originalText: newText,
+              rewrittenPitch: undefined,
+              updatedAt: now,
+            };
+          }),
+        })),
+
+      addStrategyTask: (id, task) =>
+        set((s) => ({
+          audits: s.audits.map((a) =>
+            a.id === id
+              ? {
+                  ...a,
+                  strategyTasks: [...(a.strategyTasks ?? []), task],
+                  updatedAt: new Date().toISOString(),
+                }
+              : a
+          ),
+        })),
+
+      toggleStrategyTask: (id, taskId) =>
+        set((s) => ({
+          audits: s.audits.map((a) =>
+            a.id === id
+              ? {
+                  ...a,
+                  strategyTasks: (a.strategyTasks ?? []).map((t) =>
+                    t.id === taskId ? { ...t, done: !t.done } : t
+                  ),
+                  updatedAt: new Date().toISOString(),
+                }
               : a
           ),
         })),

@@ -133,6 +133,36 @@ export const EvidenceItemSchema = z.object({
 });
 export type EvidenceItem = z.infer<typeof EvidenceItemSchema>;
 
+// A competitor stress-test result fed back onto a Claim Map claim.
+export type CompetitiveSignal = {
+  claimId: string;
+  verdict: "unsupported" | "needs_benchmark" | "plausible";
+  reasoning: string;
+  saferRewrite: string;
+  competitorRef?: string;
+  checkedAt: string;
+};
+
+// A re-audited version of the pitch, for the live improvement timeline.
+export type AuditRevision = {
+  label: string;
+  text: string;
+  score: number;
+  createdAt: string;
+};
+
+// A validation task added from the Competitors "What must you prove to win?" panel.
+export type StrategyTask = {
+  id: string;
+  text: string;
+  proofType?: string;
+  priority?: "low" | "medium" | "high";
+  owner?: string;
+  effort?: string;
+  done: boolean;
+  createdAt: string;
+};
+
 export type SavedAudit = {
   id: string;
   title: string;
@@ -143,6 +173,14 @@ export type SavedAudit = {
   audit: ClaimAuditResponse;
   rewrittenPitch?: string;
   evidenceItems: EvidenceItem[];
+  // Optional Competitive Intelligence run attached to this audit.
+  competitiveIntel?: import("@/lib/competitors/schema").CompetitiveIntelResponse;
+  // Validation tasks captured from the competitor strategy panel.
+  strategyTasks?: StrategyTask[];
+  // Competitor stress-test signals keyed by claim id.
+  competitiveSignals?: Record<string, CompetitiveSignal>;
+  // Score history from iterative re-audits (v0 = Original).
+  revisions?: AuditRevision[];
   createdAt: string;
   updatedAt: string;
 };

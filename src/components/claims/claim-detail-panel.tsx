@@ -13,6 +13,7 @@ import {
   FilePlus2,
   Loader2,
   AlertTriangle,
+  Swords,
 } from "lucide-react";
 import type { Claim, EvidenceItem } from "@/lib/schemas";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,8 @@ export function ClaimDetailPanel({
   const audit = useAudits((s) => (auditId ? s.getAudit(auditId) : undefined));
   const addEvidence = useAudits((s) => s.addEvidence);
   const updateClaimGroup = useAudits((s) => s.updateClaimGroup);
+  const appendRewrite = useAudits((s) => s.appendRewrite);
+  const signal = audit?.competitiveSignals?.[claim.id];
   const items =
     audit?.evidenceItems.filter((it) => it.claimId === claim.id) ?? [];
 
@@ -124,6 +127,43 @@ export function ClaimDetailPanel({
           </p>
           <p className="mt-1.5 text-sm leading-relaxed">{claim.credible_rewrite}</p>
         </div>
+
+        {signal && signal.verdict !== "plausible" && (
+          <div className="rounded-xl border border-[hsl(var(--risk)/0.35)] bg-[hsl(var(--risk)/0.06)] p-4">
+            <div className="flex items-center gap-2">
+              <Swords className="h-4 w-4 text-[hsl(var(--risk))]" />
+              <p className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--risk))]">
+                Competitive risk
+              </p>
+              <Badge variant={signal.verdict === "unsupported" ? "risk" : "warn"}>
+                {signal.verdict.replace("_", " ")}
+              </Badge>
+            </div>
+            {signal.competitorRef && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Checked against: {signal.competitorRef}
+              </p>
+            )}
+            <p className="mt-1.5 text-sm text-foreground/90">{signal.reasoning}</p>
+            <div className="mt-2 rounded-lg bg-[hsl(var(--proven)/0.08)] p-2 text-sm">
+              <span className="text-[hsl(var(--proven))]">Safer: </span>
+              {signal.saferRewrite}
+            </div>
+            {auditId && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="mt-3"
+                onClick={() => {
+                  appendRewrite(auditId, signal.saferRewrite);
+                  onUseRewrite?.(claim);
+                }}
+              >
+                <Wand2 className="h-3.5 w-3.5" /> Use safer rewrite
+              </Button>
+            )}
+          </div>
+        )}
 
         {/* Attached evidence */}
         <div>
