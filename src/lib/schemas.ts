@@ -143,6 +143,14 @@ export type CompetitiveSignal = {
   checkedAt: string;
 };
 
+// A re-audited version of the pitch, for the live improvement timeline.
+export type AuditRevision = {
+  label: string;
+  text: string;
+  score: number;
+  createdAt: string;
+};
+
 // A validation task added from the Competitors "What must you prove to win?" panel.
 export type StrategyTask = {
   id: string;
@@ -171,6 +179,8 @@ export type SavedAudit = {
   strategyTasks?: StrategyTask[];
   // Competitor stress-test signals keyed by claim id.
   competitiveSignals?: Record<string, CompetitiveSignal>;
+  // Score history from iterative re-audits (v0 = Original).
+  revisions?: AuditRevision[];
   createdAt: string;
   updatedAt: string;
 };

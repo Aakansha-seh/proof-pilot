@@ -9,11 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ClaimMap } from "@/components/claims/claim-map";
 import { PitchRewrite } from "@/components/claims/pitch-rewrite";
+import { ReauditPanel, ReauditCompare } from "@/components/claims/reaudit-panel";
 import { CompetitiveIntel } from "@/components/competitors/competitive-intel";
 import { EvidencePackView } from "@/components/claims/evidence-pack-view";
 import { Disclaimer } from "@/components/app/disclaimer";
 import { useMounted } from "@/components/app/use-mounted";
 import { useAudits } from "@/lib/store";
+import type { ClaimAuditResponse } from "@/lib/schemas";
 import { formatDate } from "@/lib/utils";
 
 export default function AuditWorkspace({
@@ -26,6 +28,8 @@ export default function AuditWorkspace({
   const mounted = useMounted();
   const audit = useAudits((s) => s.audits.find((a) => a.id === id));
   const setRewrite = useAudits((s) => s.setRewrite);
+  const applyReaudit = useAudits((s) => s.applyReaudit);
+  const [pendingReaudit, setPendingReaudit] = useState<ClaimAuditResponse | null>(null);
   const [tab, setTab] = useState("map");
 
   if (!mounted) {
@@ -74,6 +78,24 @@ export default function AuditWorkspace({
         </TabsList>
 
         <TabsContent value="map">
+          {pendingReaudit && (
+            <ReauditCompare
+              current={audit.audit}
+              pending={pendingReaudit}
+              onApply={() => {
+                applyReaudit(
+                  audit.id,
+                  pendingReaudit,
+                  audit.rewrittenPitch ?? audit.originalText
+                );
+                setPendingReaudit(null);
+              }}
+              onRewrite={() => {
+                setPendingReaudit(null);
+                setTab("rewrite");
+              }}
+            />
+          )}
           <ClaimMap
             audit={audit.audit}
             auditId={audit.id}
@@ -86,9 +108,17 @@ export default function AuditWorkspace({
 
         <TabsContent value="rewrite">
           <PitchRewrite
+            key={audit.revisions?.length ?? 0}
             original={audit.originalText}
             initialRewrite={audit.rewrittenPitch}
             onSave={(text) => setRewrite(audit.id, text)}
+          />
+          <ReauditPanel
+            audit={audit}
+            onReaudited={(a) => {
+              setPendingReaudit(a);
+              setTab("map");
+            }}
           />
         </TabsContent>
 

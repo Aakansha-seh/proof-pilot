@@ -38,6 +38,7 @@ type AuditsState = {
     intel: SavedAudit["competitiveIntel"]
   ) => void;
   applyCompetitiveSignals: (id: string, signals: CompetitiveSignal[]) => void;
+  applyReaudit: (id: string, newAudit: ClaimAuditResponse, newText: string) => void;
   addStrategyTask: (id: string, task: StrategyTask) => void;
   toggleStrategyTask: (id: string, taskId: string) => void;
   addEvidence: (id: string, item: EvidenceItem) => void;
@@ -156,6 +157,41 @@ export const useAudits = create<AuditsState>()(
                 }
               : a
           ),
+        })),
+
+      applyReaudit: (id, newAudit, newText) =>
+        set((s) => ({
+          audits: s.audits.map((a) => {
+            if (a.id !== id) return a;
+            const now = new Date().toISOString();
+            const base =
+              a.revisions && a.revisions.length
+                ? a.revisions
+                : [
+                    {
+                      label: "Original",
+                      text: a.originalText,
+                      score: a.audit.overall_credibility_score,
+                      createdAt: a.createdAt,
+                    },
+                  ];
+            return {
+              ...a,
+              revisions: [
+                ...base,
+                {
+                  label: `v${base.length}`,
+                  text: newText,
+                  score: newAudit.overall_credibility_score,
+                  createdAt: now,
+                },
+              ],
+              audit: newAudit,
+              originalText: newText,
+              rewrittenPitch: undefined,
+              updatedAt: now,
+            };
+          }),
         })),
 
       addStrategyTask: (id, task) =>
