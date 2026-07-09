@@ -69,13 +69,20 @@ export function StrategyArea({
             value={meta.overlap}
             tone={meta.overlap === "High" ? "--risk" : meta.overlap === "Medium" ? "--warn" : "--proven"}
           />
-          <Meta label="Market outlook" value={meta.outlook} />
           <Meta
             label="Defensibility"
             value={meta.defensibility}
             tone={meta.defensibility === "Weak" ? "--risk" : meta.defensibility === "Emerging" ? "--warn" : "--proven"}
           />
+          <Meta label="Current moat" value={meta.moat} />
         </div>
+        {meta.defensibility === "Weak" && (
+          <p className="mt-3 rounded-lg border border-[hsl(var(--risk)/0.3)] bg-[hsl(var(--risk)/0.06)] p-3 text-xs text-foreground/90">
+            Defensibility looks weak against reviewed sources. The fastest way to
+            strengthen it is to prove a workflow or data advantage with real users —
+            start with the checklist on the right.
+          </p>
+        )}
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
