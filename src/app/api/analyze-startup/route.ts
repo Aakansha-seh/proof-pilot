@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getProvider } from "@/lib/ai/providers";
 
 export async function POST(request: Request) {
   try {
@@ -32,16 +33,6 @@ export async function POST(request: Request) {
           errors,
         },
         { status: 400 }
-      );
-    }
-
-    if (!process.env.NVIDIA_API_KEY) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "NVIDIA API key is not configured.",
-        },
-        { status: 500 }
       );
     }
 
@@ -84,50 +75,26 @@ export async function POST(request: Request) {
       `analysisOptions: ${analysisOptions.join(", ")}`,
     ].join("\n");
 
-    const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.NVIDIA_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "meta/llama-3.1-8b-instruct",
-        messages: [
-          {
-            role: "system",
-            content: "You are a structured startup analysis assistant.",
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-        temperature: 0.2,
-      }),
-    });
-
-    if (!response.ok) {
+    let content = "";
+    try {
+      const provider = getProvider();
+      content = await provider.analyzeStartup(prompt);
+      content = (content || "").trim();
+    } catch (e: any) {
       return NextResponse.json(
         {
           success: false,
-          message: "AI analysis failed.",
+          message: e?.message || "AI analysis failed. Please check provider configuration.",
         },
-        { status: 500 }
+        { status: 502 }
       );
     }
-
-    const data = await response.json();
-
-    const content =
-      typeof data?.choices?.[0]?.message?.content === "string"
-        ? data.choices[0].message.content.trim()
-        : "";
 
     if (!content) {
       return NextResponse.json(
         {
           success: false,
-          message: "Failed to parse AI response.",
+          message: "Failed to parse AI response: Empty response.",
         },
         { status: 500 }
       );

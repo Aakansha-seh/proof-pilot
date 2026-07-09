@@ -126,7 +126,7 @@ export const DEMO_INTEL: CompetitiveIntelResponse = {
         "Reviewed competitors emphasize tracking and budgeting, not validated, evidence-linked coaching outcomes.",
       supportingEvidence:
         "Cleo and Copilot source pages center on spending insights and tracking; none advertise validated outcome guarantees.",
-      mustValidate:
+      validationPlan:
         "Run a 10-user study measuring whether coaching changes savings behavior versus a control.",
     },
   ],

@@ -244,4 +244,20 @@ export class OpenAICompatibleProvider implements AIProvider {
       "competitive intelligence"
     );
   }
+
+  async analyzeStartup(prompt: string): Promise<string> {
+    return this.chat(
+      [
+        {
+          role: "system",
+          content: "You are a structured startup analysis assistant.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      { jsonMode: true, maxTokens: 4096 }
+    );
+  }
 }

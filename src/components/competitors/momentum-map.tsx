@@ -37,7 +37,7 @@ export function MomentumMap({
   ];
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="mx-auto max-w-xl">
       <div className="flex gap-3">
         {/* Y axis label */}
         <div className="grid place-items-center">

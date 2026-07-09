@@ -189,7 +189,7 @@ function CompetitorDrawer({
               {c.recentEvents.map((e, i) => (
                 <li key={i} className="relative">
                   <span className="absolute -left-[21px] top-1 h-2 w-2 rounded-full bg-primary" />
-                  <p className="text-xs text-muted-foreground">{e.date} · {e.eventType.replace("_", " ")}</p>
+                  <p className="text-xs text-muted-foreground">{e.date} · {e.eventType.replace(/_/g, " ")}</p>
                   <p className="text-sm">{e.title}</p>
                   {e.url && (
                     <a href={e.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-primary">

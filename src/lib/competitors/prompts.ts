@@ -81,7 +81,7 @@ names; you may add well-known relevant players as "ai_suggested". Return JSON:
     "lastCheckedAt": "${new Date().toISOString()}"
   }],
   "timeline": [{"title":"","date":"YYYY-MM-DD","competitor":"","url":"","eventType":"launch|feature_update|funding_news|pricing_change|hiring|other"}],
-  "whitespace": [{"hypothesis":"","whyOpen":"","supportingEvidence":"","mustValidate":""}],
+  "whitespace": [{"hypothesis":"","whyOpen":"","supportingEvidence":"","validationPlan":"<validation study or test to run>"}],
   "proofOfDifference": [{"differentiator":"","competitorOverlap":"low|medium|high","proofRequired":"","recommendedAction":"","defensibleWording":""}],
   "claimCrossCheck": [{"claimId":"(optional)","claimText":"","competitorRef":"(optional)","verdict":"unsupported|needs_benchmark|plausible","reasoning":"","saferRewrite":""}]
 }`;

@@ -75,7 +75,7 @@ export const WhitespaceSchema = z.object({
   hypothesis: z.string(),
   whyOpen: z.string(),
   supportingEvidence: z.string(),
-  mustValidate: z.string(),
+  validationPlan: z.string(),
 });
 export type Whitespace = z.infer<typeof WhitespaceSchema>;
 

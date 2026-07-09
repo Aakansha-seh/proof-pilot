@@ -8,6 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { Sidebar } from "@/components/app/sidebar";
+import { Header } from "@/components/app/header";
+import { MobileNav } from "@/components/app/mobile-nav";
 
 const options = [
   { title: "Competitor Analysis", value: "competitorAnalysis", description: "Discover existing competitors and market positioning." },
@@ -213,6 +216,15 @@ export default function AnalyzeStartupPage() {
     }
   };
 
+  const escapeHtml = (str: string): string => {
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  };
+
   const handlePrintReport = () => {
     if (!analysis) return;
     setIsPrinting(true);
@@ -235,10 +247,10 @@ export default function AnalyzeStartupPage() {
     </style></head><body>
       <h1>${reportTitle}</h1>
       <div class="section box">
-        <div class="meta meta-item"><strong>Startup Name:</strong> ${formData.startupName || "—"}</div>
-        ${formData.oneLineIdea ? `<div class="meta meta-item"><strong>One-line Idea:</strong> ${formData.oneLineIdea}</div>` : ""}
-        ${formData.industry ? `<div class="meta meta-item"><strong>Industry:</strong> ${formData.industry}</div>` : ""}
-        ${formData.startupStage ? `<div class="meta meta-item"><strong>Startup Stage:</strong> ${formData.startupStage}</div>` : ""}
+        <div class="meta meta-item"><strong>Startup Name:</strong> ${escapeHtml(formData.startupName || "—")}</div>
+        ${formData.oneLineIdea ? `<div class="meta meta-item"><strong>One-line Idea:</strong> ${escapeHtml(formData.oneLineIdea)}</div>` : ""}
+        ${formData.industry ? `<div class="meta meta-item"><strong>Industry:</strong> ${escapeHtml(formData.industry)}</div>` : ""}
+        ${formData.startupStage ? `<div class="meta meta-item"><strong>Startup Stage:</strong> ${escapeHtml(formData.startupStage)}</div>` : ""}
         <div class="meta meta-item"><strong>Report Generated:</strong> ${now}</div>
       </div>
       ${analysis.summary ? `<div class="section"><h2>Summary</h2><div class="box"><p>${analysis.summary}</p></div></div>` : ""}
@@ -348,8 +360,12 @@ export default function AnalyzeStartupPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 lg:px-8">
-      <form onSubmit={handleSubmit} className="mx-auto flex max-w-5xl flex-col gap-6">
+    <div className="flex min-h-screen bg-background text-foreground">
+      <Sidebar />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <Header />
+        <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8 overflow-y-auto">
+          <form onSubmit={handleSubmit} className="mx-auto flex max-w-5xl flex-col gap-6">
         <section className="rounded-2xl border border-border/70 bg-card/80 p-6 shadow-sm sm:p-8 lg:p-10">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Sparkles className="h-4 w-4 text-primary" />
@@ -754,5 +770,8 @@ export default function AnalyzeStartupPage() {
         </section>
       </form>
     </main>
+    <MobileNav />
+      </div>
+    </div>
   );
 }

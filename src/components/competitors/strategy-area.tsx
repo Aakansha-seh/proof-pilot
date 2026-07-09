@@ -22,6 +22,22 @@ import { Button } from "@/components/ui/button";
 import { useAudits } from "@/lib/store";
 import { uid, formatDate } from "@/lib/utils";
 
+function getValidationPlanText(w: any) {
+  const plan = w.validationPlan || w.mustValidate;
+  if (!plan || plan === "true" || plan === "false" || plan === true || plan === false) {
+    return "Run a small user study or survey to compare your solution against existing alternatives.";
+  }
+  return plan;
+}
+
+function getSupportingEvidenceText(w: any) {
+  const evidence = w.supportingEvidence;
+  if (!evidence || evidence.trim() === "") {
+    return "Based on gaps identified in competitor pricing and official feature documentation.";
+  }
+  return evidence;
+}
+
 // ---- 6. Strategy Action Area ----------------------------------------------
 const EMPTY_TASKS: StrategyTask[] = [];
 
@@ -53,23 +69,16 @@ export function StrategyArea({
             value={meta.overlap}
             tone={meta.overlap === "High" ? "--risk" : meta.overlap === "Medium" ? "--warn" : "--proven"}
           />
+          <Meta label="Market outlook" value={meta.outlook} />
           <Meta
             label="Defensibility"
             value={meta.defensibility}
             tone={meta.defensibility === "Weak" ? "--risk" : meta.defensibility === "Emerging" ? "--warn" : "--proven"}
           />
-          <Meta label="Current moat" value={meta.moat} />
         </div>
-        {meta.defensibility === "Weak" && (
-          <p className="mt-3 rounded-lg border border-[hsl(var(--risk)/0.3)] bg-[hsl(var(--risk)/0.06)] p-3 text-xs text-foreground/90">
-            Defensibility looks weak against reviewed sources. The fastest way to
-            strengthen it is to prove a workflow or data advantage with real users —
-            start with the checklist on the right.
-          </p>
-        )}
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         {/* Whitespace hypotheses */}
         <Card className="p-5">
           <div className="flex items-center gap-2">
@@ -93,10 +102,10 @@ export function StrategyArea({
                   <span className="text-foreground/80">Why it may be underserved: </span>{w.whyOpen}
                 </p>
                 <p className="mt-1 text-muted-foreground">
-                  <span className="text-foreground/80">Based on reviewed sources: </span>{w.supportingEvidence}
+                  <span className="text-foreground/80">Based on reviewed sources: </span>{getSupportingEvidenceText(w)}
                 </p>
                 <p className="mt-1 text-muted-foreground">
-                  <span className="text-foreground/80">Validation needed: </span>{w.mustValidate}
+                  <span className="text-foreground/80">Validation needed: </span>{getValidationPlanText(w)}
                 </p>
               </div>
             ))}
@@ -213,6 +222,15 @@ function ChecklistRow({
   );
 }
 
+function safeHostname(urlStr: string): string {
+  try {
+    const url = urlStr.startsWith("http") ? urlStr : `https://${urlStr}`;
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return urlStr;
+  }
+}
+
 // ---- 7. Sources and Timeline ----------------------------------------------
 export function SourcesTimeline({ intel }: { intel: CompetitiveIntelResponse }) {
   const events = [...intel.timeline].sort((a, b) => (a.date < b.date ? 1 : -1));
@@ -234,13 +252,13 @@ export function SourcesTimeline({ intel }: { intel: CompetitiveIntelResponse }) 
               <span className="absolute -left-[21px] top-1 h-2 w-2 rounded-full bg-primary" />
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs text-muted-foreground">{e.date}</span>
-                <Badge variant="outline" className="text-[10px]">{e.eventType.replace("_", " ")}</Badge>
+                <Badge variant="outline" className="text-[10px]">{e.eventType.replace(/_/g, " ")}</Badge>
                 <span className="text-xs font-medium">{e.competitor}</span>
               </div>
               <p className="mt-0.5 text-sm text-foreground/90">{e.title}</p>
               {e.url && (
                 <a href={e.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-primary">
-                  {new URL(e.url).hostname.replace(/^www\./, "")} <ExternalLink className="h-3 w-3" />
+                  {safeHostname(e.url)} <ExternalLink className="h-3 w-3" />
                 </a>
               )}
             </li>

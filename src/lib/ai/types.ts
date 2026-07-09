@@ -26,6 +26,7 @@ export interface AIProvider {
     ctx: IntelContext,
     sources: SearchResult[]
   ): Promise<IntelModelOutput>;
+  analyzeStartup(prompt: string): Promise<string>;
 }
 
 export interface ProviderConfig {

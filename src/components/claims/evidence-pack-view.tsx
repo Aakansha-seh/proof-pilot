@@ -16,6 +16,8 @@ export function EvidencePackView({ audit }: { audit: SavedAudit }) {
   const [exporting, setExporting] = useState(false);
   const [aiFailed, setAiFailed] = useState(false);
 
+  const auditString = JSON.stringify(audit.audit);
+
   useEffect(() => {
     let cancelled = false;
     // Try the live provider; fall back to a locally-derived pack.
@@ -39,7 +41,7 @@ export function EvidencePackView({ audit }: { audit: SavedAudit }) {
     return () => {
       cancelled = true;
     };
-  }, [audit.audit]);
+  }, [audit.id, auditString]);
 
   if (!pack) {
     return (

@@ -116,10 +116,15 @@ export function buildDecision(intel: CompetitiveIntelResponse): Decision {
     pod?.differentiator ||
     "Potential differentiation hypothesis based on reviewed sources.";
 
-  const nextProof =
+  const rawNextProof =
     pod?.proofRequired ||
-    ws?.mustValidate ||
-    "Run a small user validation test and compare your workflow against an existing tool.";
+    ws?.validationPlan ||
+    (ws as any)?.mustValidate;
+
+  const nextProof =
+    (!rawNextProof || rawNextProof === "true" || rawNextProof === "false" || rawNextProof === true || rawNextProof === false)
+      ? "Run a small user validation test and compare your workflow against an existing tool."
+      : rawNextProof;
 
   const positioningStatement =
     pod?.defensibleWording ||
@@ -275,8 +280,12 @@ export function buildChecklist(
     }
   }
   for (const w of intel.whitespace) {
+    const rawVal = w.validationPlan || (w as any).mustValidate;
+    const cleanVal = (!rawVal || rawVal === "true" || rawVal === "false" || rawVal === true || rawVal === false)
+      ? "Run a small user validation test and compare your workflow against an existing tool."
+      : rawVal;
     items.push({
-      text: w.mustValidate,
+      text: cleanVal,
       proofType: "Validation",
       priority: "high",
       owner: "Founder",
