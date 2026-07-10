@@ -13,9 +13,11 @@ import { ReauditPanel, ReauditCompare } from "@/components/claims/reaudit-panel"
 import { CompetitiveIntel } from "@/components/competitors/competitive-intel";
 import { EvidencePackView } from "@/components/claims/evidence-pack-view";
 import { Disclaimer } from "@/components/app/disclaimer";
+import { ProofPilotChat } from "@/components/chat/proofpilot-chat";
 import { useMounted } from "@/components/app/use-mounted";
 import { useAudits } from "@/lib/store";
 import type { ClaimAuditResponse } from "@/lib/schemas";
+import { buildAuditContext } from "@/lib/chat-context";
 import { formatDate } from "@/lib/utils";
 
 function TabCount({ n }: { n: number }) {
@@ -157,6 +159,18 @@ export default function AuditWorkspace({
           <EvidencePackView audit={audit} />
         </TabsContent>
       </Tabs>
+
+      <ProofPilotChat
+        scopeKey={audit.id}
+        context={buildAuditContext(audit)}
+        subtitle={`${audit.title} · this audit only`}
+        starters={[
+          "Summarize this audit",
+          "What are my biggest risks?",
+          "How do I strengthen my weakest claim?",
+          audit.competitiveIntel ? "How do I stand out vs competitors?" : "What should I do next?",
+        ]}
+      />
     </div>
   );
 }
