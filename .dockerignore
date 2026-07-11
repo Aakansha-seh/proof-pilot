@@ -1,0 +1,25 @@
+# Dependencies & build output (reinstalled/rebuilt inside the image)
+node_modules
+.next
+out
+build
+coverage
+
+# Secrets — never copy real keys into the image
+.env
+.env*.local
+
+# VCS / tooling
+.git
+.gitignore
+.vercel
+*.tsbuildinfo
+npm-debug.log*
+
+# Docker + docs (not needed at runtime)
+Dockerfile
+.dockerignore
+README.md
+
+# OS cruft
+.DS_Store

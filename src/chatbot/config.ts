@@ -18,13 +18,26 @@ export const config = {
   // its own nvidia|fireworks|amd selection, so the chatbot does not read it to
   // avoid a collision — the endpoint below is what actually routes the call.)
   provider: 'openai-compatible',
-  // Fallback chain: chatbot's own vars -> ProofPilot's NVIDIA config -> defaults.
+  // Fallback chain so the assistant follows whichever provider key is present:
+  // chatbot's own AI_* -> Fireworks -> AMD (Fireworks-on-AMD) -> NVIDIA -> default.
   baseUrl:
     process.env.AI_BASE_URL ||
+    process.env.FIREWORKS_BASE_URL ||
+    process.env.AMD_BASE_URL ||
     process.env.NVIDIA_BASE_URL ||
     'https://integrate.api.nvidia.com/v1',
-  apiKey: normalizeApiKey(process.env.AI_API_KEY || process.env.NVIDIA_API_KEY),
-  model: process.env.AI_MODEL || process.env.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct',
+  apiKey: normalizeApiKey(
+    process.env.AI_API_KEY ||
+      process.env.FIREWORKS_API_KEY ||
+      process.env.AMD_API_KEY ||
+      process.env.NVIDIA_API_KEY
+  ),
+  model:
+    process.env.AI_MODEL ||
+    process.env.FIREWORKS_MODEL ||
+    process.env.AMD_MODEL ||
+    process.env.NVIDIA_MODEL ||
+    'meta/llama-3.1-70b-instruct',
   providerTimeoutMs: Number(process.env.AI_TIMEOUT_MS) || 45_000,
   systemPrompt: process.env.AI_SYSTEM_PROMPT || proofpilotMentorPrompt,
 };

@@ -22,7 +22,7 @@ export type ChatResult =
 // always pass, even if the original startup-domain classifier doesn't list the
 // exact word. The original classifier file is left unchanged.
 const auditVocabulary =
-  /\b(audit|claim|claims|risk|risks|score|rewrite|evidence|analysis|summary|whitespace|competitor|competitors)\b/i;
+  /\b(audit|claim|claims|risk|risks|score|rewrite|evidence|analysis|analyse|analyze|summary|summarize|summarise|report|reports|whitespace|competitor|competitors|market|pitch|improve|improvement|strengthen|weak|weakest|next|step|steps|stand\s+out|validation|credibility)\b/i;
 
 function isSupported(message: string, hasHistory: boolean): boolean {
   if (classifyProofPilotDomain(message).supported) return true;
