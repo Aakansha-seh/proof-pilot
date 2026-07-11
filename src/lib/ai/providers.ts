@@ -21,13 +21,16 @@ function envConfig(id: ProviderId): ProviderConfig {
     },
     amd: { base: "", model: "" },
   };
-  const model = process.env[`${upper}_MODEL`] || defaults[id].model;
+  // Trim so a stray space/newline pasted into a dashboard env var (e.g.
+  // "amd " or a key with a trailing newline) doesn't silently break things.
+  const trim = (v?: string) => (v ?? "").trim();
+  const model = trim(process.env[`${upper}_MODEL`]) || defaults[id].model;
   return {
     id,
-    apiKey: process.env[`${upper}_API_KEY`] ?? "",
-    baseUrl: process.env[`${upper}_BASE_URL`] || defaults[id].base,
+    apiKey: trim(process.env[`${upper}_API_KEY`]),
+    baseUrl: trim(process.env[`${upper}_BASE_URL`]) || defaults[id].base,
     model,
-    visionModel: process.env[`${upper}_VISION_MODEL`] || model,
+    visionModel: trim(process.env[`${upper}_VISION_MODEL`]) || model,
   };
 }
 
@@ -48,10 +51,17 @@ export function getIntelProvider(): { provider: AIProvider; usedAmd: boolean } {
   return { provider: getProvider(), usedAmd: false };
 }
 
-/** Resolve the active provider id from AI_PROVIDER (defaults to nvidia). */
+/**
+ * Resolve the active provider id. Prefers an explicit AI_PROVIDER (whitespace
+ * tolerated); if that isn't set, auto-selects whichever provider actually has
+ * credentials configured, so setting the AMD_* vars alone is enough.
+ */
 export function activeProviderId(): ProviderId {
-  const raw = (process.env.AI_PROVIDER || "nvidia").toLowerCase();
+  const raw = (process.env.AI_PROVIDER || "").toLowerCase().trim();
   if (raw === "fireworks" || raw === "amd" || raw === "nvidia") return raw;
+  // No explicit (valid) choice — fall back to whatever is configured.
+  if (process.env.AMD_API_KEY && process.env.AMD_BASE_URL) return "amd";
+  if (process.env.FIREWORKS_API_KEY) return "fireworks";
   return "nvidia";
 }
 
