@@ -65,8 +65,15 @@ SOURCES (only cite these URLs; ${sources.length} total)
 ${sourceLines || "(no sources retrieved — mark competitors with activityLabel and empty sources)"}
 
 TASK
-Analyze 3-5 competitors most relevant to the user's product. Prefer user-supplied
-names; you may add well-known relevant players as "ai_suggested". Return JSON:
+Identify the 3-5 competitors most relevant to the user's product. This list MUST NOT
+be empty. Prefer user-supplied names, then add the best-known relevant players from
+your general knowledge as "ai_suggested". Naming a real, well-known competitor from
+general knowledge is EXPECTED and is NOT fabrication — fabrication is only inventing
+metrics, pricing, URLs, or dated events. For an "ai_suggested" competitor you cannot
+source, use an empty "sources" array, set "activityLabel" to "Limited recent public
+activity found in reviewed sources.", keep numeric signals conservative, and write
+positioning/overlap from general knowledge of that product. Even if the SOURCES above
+are irrelevant, sparse, or empty, still return the real players in this space. Return JSON:
 {
   "summary": "<neutral market narrative grounded in sources>",
   "competitors": [{

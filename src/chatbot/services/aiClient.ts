@@ -31,11 +31,13 @@ export function interpretAssistantResponse(payload: unknown): string {
   try {
     parsed = JSON.parse(content);
   } catch {
-    return uncertainResponseMessage;
+    // Model didn't return the JSON contract (e.g. response_format unsupported) —
+    // fall back to its plain-text answer instead of a canned refusal.
+    return content.trim();
   }
 
   if (!parsed || typeof parsed !== 'object') {
-    return uncertainResponseMessage;
+    return content.trim();
   }
 
   const obj = parsed as { confidence?: unknown; answer?: unknown };
@@ -78,9 +80,8 @@ export async function sendChatToProvider(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), providerTimeoutMs);
 
-  let response: Response;
-  try {
-    response = await fetch(`${baseUrl}/chat/completions`, {
+  const post = (useJson: boolean): Promise<Response> =>
+    fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -95,41 +96,64 @@ export async function sendChatToProvider(
           { role: 'user', content: message.trim() },
         ],
         temperature: 0.4,
-        response_format: { type: 'json_object' },
+        ...(useJson ? { response_format: { type: 'json_object' } } : {}),
       }),
       signal: controller.signal,
     });
-  } catch (error) {
+
+  const onNetworkError = (error: unknown): never => {
     if ((error as { name?: string })?.name === 'AbortError') {
       throw buildProviderError('The AI service took too long to respond. Please try again in a moment.', 504);
     }
     throw buildProviderError('ProofPilot could not reach the AI service. Please try again in a moment.', 503);
+  };
+
+  try {
+    let response: Response;
+    try {
+      response = await post(true);
+    } catch (error) {
+      return onNetworkError(error);
+    }
+
+    // If the endpoint rejects response_format json_object (400), retry once
+    // without it — interpretAssistantResponse handles plain-text answers too.
+    if (!response.ok && response.status === 400) {
+      const probe = await response.clone().text().catch(() => '');
+      if (/response_format|json/i.test(probe)) {
+        try {
+          response = await post(false);
+        } catch (error) {
+          return onNetworkError(error);
+        }
+      }
+    }
+
+    let payload: unknown;
+    try {
+      payload = await response.json();
+    } catch {
+      throw buildProviderError('AI provider returned an invalid response.', 502);
+    }
+
+    if (!response.ok) {
+      const errPayload = payload as { error?: { message?: string }; message?: string };
+      const providerMessage =
+        errPayload?.error?.message ||
+        errPayload?.message ||
+        'ProofPilot received an unexpected response from the AI service.';
+      const statusCode =
+        response.status === 408 || response.status === 504
+          ? 504
+          : response.status >= 500
+            ? 502
+            : response.status;
+      console.error('AI provider error:', redactSensitiveProviderText(providerMessage));
+      throw buildProviderError('ProofPilot could not complete the request. Please try again in a moment.', statusCode);
+    }
+
+    return interpretAssistantResponse(payload);
   } finally {
     clearTimeout(timeoutId);
   }
-
-  let payload: unknown;
-  try {
-    payload = await response.json();
-  } catch {
-    throw buildProviderError('AI provider returned an invalid response.', 502);
-  }
-
-  if (!response.ok) {
-    const errPayload = payload as { error?: { message?: string }; message?: string };
-    const providerMessage =
-      errPayload?.error?.message ||
-      errPayload?.message ||
-      'ProofPilot received an unexpected response from the AI service.';
-    const statusCode =
-      response.status === 408 || response.status === 504
-        ? 504
-        : response.status >= 500
-          ? 502
-          : response.status;
-    console.error('AI provider error:', redactSensitiveProviderText(providerMessage));
-    throw buildProviderError('ProofPilot could not complete the request. Please try again in a moment.', statusCode);
-  }
-
-  return interpretAssistantResponse(payload);
 }

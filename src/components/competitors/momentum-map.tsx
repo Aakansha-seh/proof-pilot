@@ -26,6 +26,16 @@ export function MomentumMap({
 }) {
   const [hover, setHover] = useState<string | null>(null);
 
+  // When the model had no source-backed activity data, the activity signal comes
+  // back uniform/flat and the vertical axis carries no real information. Detect
+  // that so we can spread points for readability instead of stacking them on one
+  // line — the quadrant coloring still uses each competitor's true values.
+  const activityVals = competitors.map((c) => c.marketActivitySignal);
+  const flatActivity =
+    competitors.length > 1 &&
+    Math.max(...activityVals) - Math.min(...activityVals) <= 4;
+  const n = competitors.length;
+
   const px = (v: number) => 6 + (v / 100) * 88; // left %
   const py = (v: number) => 6 + ((100 - v) / 100) * 88; // top %
 
@@ -83,9 +93,15 @@ export function MomentumMap({
             const q = quadrantOf(c.productOverlap, c.marketActivitySignal);
             const tone = QUADRANT_META[q].token;
             const isActive = hover === c.name || selected === c.name;
-            const size = 13 + (c.marketActivitySignal / 100) * 11; // 13-24px
+            // Size by overlap when activity is flat (so it still varies), else by activity.
+            const sizeMetric = flatActivity ? c.productOverlap : c.marketActivitySignal;
+            const size = 13 + (sizeMetric / 100) * 11; // 13-24px
             const left = px(c.productOverlap);
-            const top = py(c.marketActivitySignal);
+            // Only when activity is flat, fan points out vertically so they don't
+            // stack — kept small enough to stay within the same quadrant half.
+            const jitter = flatActivity ? (i - (n - 1) / 2) * Math.min(6, 40 / n) : 0;
+            const top = Math.max(10, Math.min(88, py(c.marketActivitySignal) + jitter));
+            const labelBelow = flatActivity ? i % 2 === 0 : true;
             return (
               <div key={c.name}>
                 <motion.button
@@ -114,7 +130,12 @@ export function MomentumMap({
                 />
                 <span
                   className="pointer-events-none absolute -translate-x-1/2 whitespace-nowrap text-[10px] font-medium text-foreground/80"
-                  style={{ left: `${left}%`, top: `calc(${top}% + ${size / 2 + 3}px)` }}
+                  style={{
+                    left: `${left}%`,
+                    top: labelBelow
+                      ? `calc(${top}% + ${size / 2 + 3}px)`
+                      : `calc(${top}% - ${size / 2 + 13}px)`,
+                  }}
                 >
                   {c.name}
                 </span>
@@ -155,6 +176,13 @@ export function MomentumMap({
         Competitive positioning hypothesis based on reviewed public sources. Activity
         is not a measure of revenue or user growth.
       </p>
+      {flatActivity && (
+        <p className="mt-1 text-center text-[11px] text-[hsl(var(--warn))]">
+          No source-backed activity was found for these competitors — points are spread
+          vertically for readability; horizontal position (product overlap) is the
+          meaningful axis here.
+        </p>
+      )}
     </div>
   );
 }

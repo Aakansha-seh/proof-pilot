@@ -56,31 +56,179 @@
 /* ---------- Ambient background field ---------- */
 .bg-grid {
   background-image:
-    linear-gradient(to right, hsl(var(--border) / 0.35) 1px, transparent 1px),
-    linear-gradient(to bottom, hsl(var(--border) / 0.35) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+    linear-gradient(to right, hsl(var(--border) / 0.22) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border) / 0.22) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, #000 40%, transparent 100%);
+}
+
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3联%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
+  opacity: 0.25;
 }
 
 .aurora {
   background:
-    radial-gradient(60% 50% at 15% 0%, hsl(224 76% 40% / 0.28), transparent 60%),
-    radial-gradient(50% 45% at 85% 10%, hsl(199 89% 45% / 0.18), transparent 60%),
-    radial-gradient(50% 40% at 50% 100%, hsl(262 60% 45% / 0.12), transparent 60%);
-  filter: blur(6px);
+    radial-gradient(70% 60% at 20% -10%, hsl(224 76% 38% / 0.24), transparent 60%),
+    radial-gradient(60% 50% at 80% 15%, hsl(199 89% 45% / 0.16), transparent 60%),
+    radial-gradient(55% 45% at 50% 85%, hsl(262 60% 45% / 0.10), transparent 60%);
+  filter: blur(8px);
 }
 
 .glass {
-  background: hsl(var(--card) / 0.6);
-  backdrop-filter: blur(14px);
-  border: 1px solid hsl(var(--border) / 0.7);
+  background: linear-gradient(135deg, hsl(var(--card) / 0.45) 0%, hsl(var(--card) / 0.7) 100%);
+  backdrop-filter: blur(16px);
+  border: 1px solid hsl(var(--border) / 0.45);
 }
 
 .text-gradient {
-  background: linear-gradient(180deg, hsl(210 40% 98%), hsl(215 25% 72%));
+  background: linear-gradient(180deg, hsl(210 40% 100%) 20%, hsl(215 25% 75%) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+/* ---------- Landing: premium motion & lighting ---------- */
+.glow-radial {
+  background: radial-gradient(closest-side, hsl(var(--primary) / 0.28), transparent 70%);
+}
+.hairline {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(var(--border) / 0.8), transparent);
+}
+.dotgrid {
+  background-image: radial-gradient(hsl(var(--border) / 0.45) 1px, transparent 1px);
+  background-size: 20px 20px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 35%, transparent 100%);
+}
+.text-gradient-primary {
+  background: linear-gradient(120deg, hsl(210 40% 100%) 0%, hsl(var(--primary)) 50%, hsl(199 89% 60%) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Drifting aurora background */
+@keyframes pp-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(1.5%, 1%, 0) scale(1.02); }
+  66% { transform: translate3d(-1%, -1.5%, 0) scale(0.98); }
+}
+.animate-drift { animation: pp-drift 24s ease-in-out infinite; }
+
+/* Laser Scanner */
+@keyframes pp-scan {
+  0% { transform: translateY(-5%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(105%); opacity: 0; }
+}
+.animate-scan { animation: pp-scan 3.5s cubic-bezier(0.25, 1, 0.5, 1) infinite; }
+
+/* Loading Shimmer */
+@keyframes pp-shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, hsl(var(--primary)/0.08) 50%, transparent);
+  background-size: 200% 100%;
+  animation: pp-shimmer 2.5s ease-in-out infinite;
+}
+
+/* Radar Sweep */
+@keyframes radar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.animate-radar {
+  animation: radar-sweep 8s linear infinite;
+  transform-origin: center;
+}
+
+/* Flowing dash animation for data pipelines */
+@keyframes pipeline-flow {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+.animate-flow-dash {
+  stroke-dasharray: 4, 4;
+  animation: pipeline-flow 0.8s linear infinite;
+}
+
+.card-hover {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px -16px hsl(var(--primary) / 0.22);
+  border-color: hsl(var(--primary) / 0.35);
+}
+
+/* Glowing cursor helper */
+.cursor-glow {
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, hsl(var(--primary) / 0.12) 0%, transparent 70%);
+  pointer-events: none;
+  position: fixed;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+  mix-blend-mode: screen;
+}
+
+/* Premium text highlights */
+.highlight-unsupported {
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: hsl(var(--risk));
+  text-underline-offset: 4px;
+  transition: all 0.2s ease;
+}
+.highlight-unsupported:hover {
+  background: hsl(var(--risk) / 0.08);
+  color: hsl(var(--risk) / 1);
+}
+
+.highlight-buzzword {
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-decoration-color: hsl(var(--warn));
+  text-underline-offset: 4px;
+  transition: all 0.2s ease;
+}
+.highlight-buzzword:hover {
+  background: hsl(var(--warn) / 0.08);
+  color: hsl(var(--warn) / 1);
+}
+
+.highlight-projection {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 4px;
+  text-decoration-color: hsl(var(--future));
+  transition: all 0.2s ease;
+}
+.highlight-projection:hover {
+  background: hsl(var(--future) / 0.08);
+  color: hsl(var(--future) / 1);
+}
+
+.highlight-proven {
+  border-bottom: 2px solid hsl(var(--proven) / 0.5);
+  transition: all 0.2s ease;
+}
+.highlight-proven:hover {
+  background: hsl(var(--proven) / 0.08);
+  border-bottom-color: hsl(var(--proven) / 1);
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Thin custom scrollbar */

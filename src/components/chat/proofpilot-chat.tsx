@@ -219,6 +219,34 @@ export function ProofPilotChat({
                     </div>
                   </motion.div>
                 )}
+
+                {/* Suggested follow-up questions after the latest answer */}
+                {!loading &&
+                  messages.length > 0 &&
+                  messages[messages.length - 1].role === "assistant" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 }}
+                      className="flex flex-wrap gap-2 pl-9"
+                    >
+                      {starters
+                        .filter((s) => !messages.some((m) => m.text === s))
+                        .slice(0, 3)
+                        .map((s) => (
+                          <motion.button
+                            key={s}
+                            type="button"
+                            whileHover={{ scale: 1.04 }}
+                            whileTap={{ scale: 0.96 }}
+                            onClick={() => send(s)}
+                            className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs text-foreground/70 transition-colors hover:border-primary/50 hover:bg-primary/10 hover:text-foreground"
+                          >
+                            {s}
+                          </motion.button>
+                        ))}
+                    </motion.div>
+                  )}
               </div>
 
               {/* Starter prompts */}

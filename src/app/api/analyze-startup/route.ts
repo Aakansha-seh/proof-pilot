@@ -60,8 +60,9 @@ export async function POST(request: Request) {
       "Do not fabricate citations, URLs, research papers, government reports, funding numbers, market statistics, or company data.",
       "Return ONLY valid JSON with no markdown, no code fences, no explanations, and no extra text.",
       "Include the requested sections plus a concise summary.",
-      "Use exactly this JSON schema and include only the requested section fields:",
-      '{"summary":"string","competitorAnalysis":[{"name":"string","description":"string","strength":"string"}],"marketResearch":{"marketSize":"string","targetAudience":"string","industryTrend":"string"},"riskAssessment":["string"],"evidenceValidation":[{"claim":"string","status":"Supported | Partially Supported | Weakly Supported | Insufficient Evidence","reason":"string"}],"pitchImprovements":["string"]}',
+      "Use exactly this JSON shape and include only the requested section fields. Each angle-bracket value is a DESCRIPTION of what to write — replace every one with real, specific content grounded in the startup details above. Never output the literal placeholder text, the angle brackets, or the word \"string\".",
+      '{"summary":"<2-3 sentence executive summary of the opportunity>","competitorAnalysis":[{"name":"<real competitor company name>","description":"<what they do and how they overlap with this startup>","strength":"<their main competitive strength>"}],"marketResearch":{"marketSize":"<market size estimate with brief reasoning>","targetAudience":"<who the buyers are>","industryTrend":"<a relevant current industry trend>"},"riskAssessment":["<a specific, concrete risk>"],"evidenceValidation":[{"claim":"<a claim taken from the pitch>","status":"Supported | Partially Supported | Weakly Supported | Insufficient Evidence","reason":"<why this status, with concrete reasoning>"}],"pitchImprovements":["<a concrete, actionable improvement>"]}',
+      "Reminder: if any field would contain the word \"string\" or an angle-bracket placeholder, you have not done the task — write the real analysis instead.",
       "",
       `requestedSections: ${analysisOptions.join(", ")}`,
       `startupName: ${startupName}`,
@@ -109,10 +110,20 @@ export async function POST(request: Request) {
     const extractJson = (text: string): string | null => {
       const startIndex = text.indexOf("{");
       if (startIndex === -1) return null;
+      // String-aware brace matching: ignore braces inside quoted strings so a
+      // value like "we grew {fast}" can't throw off the depth count.
       let depth = 0;
+      let inStr = false;
+      let esc = false;
       for (let i = startIndex; i < text.length; i += 1) {
         const char = text[i];
-        if (char === "{") {
+        if (inStr) {
+          if (esc) esc = false;
+          else if (char === "\\") esc = true;
+          else if (char === '"') inStr = false;
+        } else if (char === '"') {
+          inStr = true;
+        } else if (char === "{") {
           depth += 1;
         } else if (char === "}") {
           depth -= 1;
